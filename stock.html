@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Froolla – Purchase List & Order List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#171110">
+<style>
+:root{
+  --bg:#171110; --surface:#241a17; --surface-2:#2c211d; --border:#3c2d27;
+  --text:#f3e9e0; --text-dim:#b2a196; --text-faint:#7d6f66;
+  --amber:#e8a33d; --amber-ink:#241a08; --teal:#5fa08c; --rust:#c4573b;
+  --green:#2ecc71; --green-ink:#0d2b18;
+  --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.4}
+h1,.tab,.sec,.num,.q,.c,button{font-family:'Space Grotesk',-apple-system,sans-serif}
+::selection{background:var(--amber);color:var(--amber-ink)}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+body.embed .wrap{padding:16px 16px calc(110px + env(safe-area-inset-bottom,0px))}
+h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.01em}
+.hrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+body.embed .hrow{justify-content:flex-end;margin-bottom:12px}
+body.embed h1{display:none}
+
+/* segmented tabs (same as app .segmented) */
+.tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:4px;margin-bottom:16px}
+.tab{flex:1;padding:10px 4px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text-dim);background:transparent;border:0;text-align:center}
+.tab[aria-selected="true"]{background:var(--amber);color:var(--amber-ink)}
+
+.card{background:transparent;border:0;padding:0}
+.row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:13px 14px;margin-bottom:14px}
+label{display:block;margin-bottom:7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint)}
+input{font:inherit;font-size:16px;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;width:100%;min-width:0}
+input::placeholder{color:var(--text-faint)}
+input:focus,button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+
+.head,.item{display:grid;grid-template-columns:28px 1fr 92px;gap:8px;align-items:center}
+.w .head,.w .item{grid-template-columns:1fr 92px}
+.head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);padding:0 14px 8px}
+.item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:8px 8px 8px 14px;margin-bottom:9px}
+.item.has{border-color:var(--amber);background:linear-gradient(155deg,rgba(232,163,61,.12),var(--surface))}
+.item .q,.item .c{padding:9px 6px;text-align:center;font-weight:700;color:var(--amber)}
+.num{text-align:left;color:var(--text-faint);font-weight:600;font-size:13px}
+.name{display:flex;align-items:center;justify-content:space-between;gap:6px;overflow-wrap:anywhere;font-size:15px;font-weight:600}
+.name small{display:block;color:var(--text-faint);font-weight:400;font-size:12px;margin-top:1px}
+.item.has .name{color:var(--text)}
+
+.sec{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint)}
+.sec:first-child{margin-top:4px}
+.sec button{padding:7px 12px;font-size:12.5px}
+.addf{display:flex;gap:6px;margin-bottom:10px}
+.addf input.u2{width:76px;flex:none}
+.addf button{background:var(--amber);color:var(--amber-ink);padding:0 16px;border-radius:var(--radius-sm)}
+
+button{font-weight:600;font-size:14px;border:0;border-radius:var(--radius-sm);padding:12px 16px;cursor:pointer;color:var(--text);background:none;-webkit-appearance:none;appearance:none}
+button:active{transform:scale(.97)}
+.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.hrow button{padding:8px 14px;font-size:13px}
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.wa{background:var(--green);color:var(--green-ink);flex:1;min-width:200px;padding:15px;font-weight:700}
+.del{display:none;background:rgba(196,87,59,.15);color:#e79080;padding:5px 10px;font-size:13px;border-radius:8px;flex-shrink:0}
+body.manage .del{display:inline-block}
+.hint,.save{color:var(--text-faint);font-size:12px;margin-top:10px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hrow"><h1>🛒 FROOLLA</h1><button class="ghost" id="mg">✏️ Manage</button></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t-d" aria-selected="true">Next day purchase</button>
+    <button class="tab" role="tab" id="t-w" aria-selected="false">Weekly order list</button>
+  </div>
+
+  <div class="card" id="daily">
+    <div class="row"><label for="dd">📅 Purchase Date</label><input type="date" id="dd"></div>
+    <div class="head"><span>No.</span><span>Item Name</span><span>Quantity</span></div>
+    <div id="ditems"></div>
+    <div class="row" style="margin-top:14px"><label for="dby">📝 Prepared By</label><input type="text" id="dby" placeholder="Name"></div>
+    <div class="actions">
+      <button class="wa" id="dshare">Share on WhatsApp</button>
+      <button class="ghost" id="dclear">Clear</button>
+    </div>
+    <div class="hint">Only items with a quantity are shared.</div>
+  </div>
+
+  <div class="card w hide" id="weekly">
+    <div class="row"><label for="wd">📅 Order Date</label><input type="date" id="wd"></div>
+    <div class="head"><span>Item</span><span>Quantity</span></div>
+    <div id="witems"></div>
+    <div class="row" style="margin-top:14px"><label for="wby">📝 Prepared By</label><input type="text" id="wby" placeholder="Name"></div>
+    <div class="actions">
+      <button class="wa" id="wshare">Share on WhatsApp</button>
+      <button class="ghost" id="wclear">Clear</button>
+    </div>
+    <div class="hint">Only items with a quantity are shared.</div>
+  </div>
+</div>
+<script>
+if(location.search.indexOf("theme=dark")>-1)document.documentElement.setAttribute("data-theme","dark");
+document.addEventListener("DOMContentLoaded",()=>{if(location.search.indexOf("embed")>-1)document.body.classList.add("embed");});
+const $=id=>document.getElementById(id);
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmt(v){if(!v)return '__ / __ / ____';const [y,m,d]=v.split('-');return d+' / '+m+' / '+y;}
+const now=new Date(),tom=new Date();tom.setDate(tom.getDate()+1);
+$('dd').value=ymd(tom);$('wd').value=ymd(now);
+function share(text){window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener');}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ---------- local DB (localStorage) ---------- */
+const KEY='froolla_catalog_v1', KBY='froolla_prepared_by';
+const DEF={
+daily:[
+["Grocery & Kitchen",["Sugar","Milk","Maida","Corn flour","Macaroni","Eggs","Bread","Sunflower oil","Chicken","Sprite"]],
+["Fruits & Vegetables",["Mosambi","Apple","Watermelon","Muskmelon","Grapes","Papaya","Cucumber","Tomato","Iceberg lettuce","Lemon","Pineapple","Pomegranate","Mango","Chikoo","Carrot","Onion","Mint leaves"]],
+["Dairy, Spreads & Drink Mixes",["Dairy Milk","Biscoff","Coffee powder","KitKat","Oreo","Milo powder"]]],
+weekly:[
+["Packing Items",[["Foil paper","pcs"],["Fork","pack"],["Juice glass","pcs"],["Loaded pack","pcs"],["Packing cover large","pack"],["Packing cover small","pack"],["Sandwich paper","pcs"],["Spoon","pack"],["Straw","pack"],["Tissue","pcs"],["Waste cover","pcs"]]],
+["Pulp",[["Avocado pulp","pcs"],["Chikku (Sapota)","kg"],["Mango pulp","pcs"],["Strawberry pulp","pcs"],["Tender Coconut pulp","pcs"]]],
+["Dry Fruits & Nuts",[["Cashew","g"],["Dates","g"]]],
+["Syrups",[["Blue Curacao Syrup","ml"],["Bubblegum Syrup","ml"],["Chocolate Syrup","ml"],["Green Apple mojito","ml"],["Mint mojito","ml"],["Mojito flavour syrup","ml"],["Passion Fruit Syrup","ml"],["Peach Syrup","ml"],["Raspberry Syrup","ml"],["Strawberry Syrup","ml"],["Watermelon mojito syrup","ml"]]],
+["Sauces",[["1000 island sauce","pcs"],["Cheese sauce","pcs"],["Chipotle sauce","pcs"],["Ketchup bottle","ml"],["Ketchup sachet","pcs"],["Mayonaise sachet","pcs"],["Mayonnaise sauce","pcs"],["Peri Peri Sauce","pcs"]]],
+["Frozen Items",[["Butter block","pcs"],["Cheese Slice","pcs"],["Chicken strips","pack"],["French Fries","pcs"],["Ice cream mango","pcs"],["Ice Cream vanilla","pcs"],["Ice cubes","kg"],["Paneer cube","pcs"],["Wrap / Tortilla","pcs"]]]]};
+let DB;
+try{DB=JSON.parse(localStorage.getItem(KEY));}catch(e){DB=null;}
+if(!DB||!DB.daily||!DB.weekly)DB=JSON.parse(JSON.stringify(DEF));
+let saved=true;
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){saved=false;}}
+persist();
+try{$('dby').value=$('wby').value=localStorage.getItem(KBY)||'';}catch(e){}
+['dby','wby'].forEach(id=>$(id).addEventListener('input',e=>{
+  $('dby').value=$('wby').value=e.target.value;
+  try{localStorage.setItem(KBY,e.target.value);}catch(x){}
+}));
+document.querySelectorAll('.hint').forEach(h=>{h.textContent+=' New items are saved on this device.';});
+
+/* tabs + manage */
+function tab(w){
+  $('daily').classList.toggle('hide',w);$('weekly').classList.toggle('hide',!w);
+  $('t-d').setAttribute('aria-selected',!w);$('t-w').setAttribute('aria-selected',w);
+}
+$('t-d').onclick=()=>tab(false);$('t-w').onclick=()=>tab(true);
+$('mg').onclick=()=>{const on=document.body.classList.toggle('manage');$('mg').textContent=on?'✅ Done':'✏️ Manage';};
+
+/* ---------- render ---------- */
+function snapshot(box,cls){const m={};box.querySelectorAll('.item').forEach(r=>{const k=r.dataset.k;const q=r.querySelector('.'+cls).value;if(q)m[k]=q;});return m;}
+function renderD(){
+  const box=$('ditems'),keep=snapshot(box,'q');box.innerHTML='';
+  DB.daily.forEach(([t,list],ci)=>{
+    const h=document.createElement('div');h.className='sec';
+    h.innerHTML='<span>'+esc(t)+' <span style="color:var(--muted);font-weight:400">'+list.length+'</span></span>';
+    const b=document.createElement('button');b.className='ghost';b.textContent='+ Add';h.appendChild(b);box.appendChild(h);
+    const f=document.createElement('div');f.className='addf hide';
+    f.innerHTML='<input type="text" placeholder="New item name" aria-label="New item name"><button>Save</button>';
+    box.appendChild(f);
+    const add=()=>{const v=f.querySelector('input').value.trim();if(!v)return;
+      if(!list.some(n=>n.toLowerCase()===v.toLowerCase()))list.push(v);persist();renderD();};
+    b.onclick=()=>{f.classList.toggle('hide');f.querySelector('input').focus();};
+    f.querySelector('button').onclick=add;
+    f.querySelector('input').addEventListener('keydown',e=>{if(e.key==='Enter')add();});
+    const grp=document.createElement('div');box.appendChild(grp);
+    list.forEach((n,ii)=>{
+      const d=document.createElement('div');d.className='item';d.dataset.k=ci+'|'+n;
+      d.innerHTML='<span class="num"></span><span class="name"><span class="n-t">'+esc(n)+'</span><button class="del" aria-label="Delete '+esc(n)+'">✕</button></span><input type="text" class="q" placeholder="Qty" aria-label="'+esc(n)+' quantity">';
+      const q=d.querySelector('.q');if(keep[d.dataset.k]){q.value=keep[d.dataset.k];d.classList.add('has');}
+      q.addEventListener('input',e=>d.classList.toggle('has',!!e.target.value.trim()));
+      d.querySelector('.del').onclick=()=>{if(confirm('Delete "'+n+'"?')){list.splice(ii,1);persist();renderD();}};
+      grp.appendChild(d);
+    });
+  });
+  let i=0;box.querySelectorAll('.item').forEach(r=>{r.querySelector('.num').textContent=++i;});
+}
+function renderW(){
+  const box=$('witems'),keep=snapshot(box,'c');box.innerHTML='';
+  DB.weekly.forEach(([t,list],ci)=>{
+    const h=document.createElement('div');h.className='sec';
+    h.innerHTML='<span>'+esc(t)+' <span style="color:var(--muted);font-weight:400">'+list.length+'</span></span>';
+    const b=document.createElement('button');b.className='ghost';b.textContent='+ Add';h.appendChild(b);box.appendChild(h);
+    const f=document.createElement('div');f.className='addf hide';
+    f.innerHTML='<input type="text" placeholder="New item name" aria-label="New item name"><input type="text" class="u2" placeholder="Unit" aria-label="Unit"><button>Save</button>';
+    box.appendChild(f);
+    const add=()=>{const v=f.querySelector('input').value.trim(),u=f.querySelector('.u2').value.trim()||'pcs';if(!v)return;
+      if(!list.some(x=>x[0].toLowerCase()===v.toLowerCase()))list.push([v,u]);persist();renderW();};
+    b.onclick=()=>{f.classList.toggle('hide');f.querySelector('input').focus();};
+    f.querySelector('button').onclick=add;
+    f.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')add();}));
+    const grp=document.createElement('div');grp.dataset.cat=t;box.appendChild(grp);
+    list.forEach(([n,u],ii)=>{
+      const d=document.createElement('div');d.className='item';d.dataset.k=ci+'|'+n;
+      d.innerHTML='<span class="name"><span><span class="n-t">'+esc(n)+'</span><small class="u">'+esc(u)+'</small></span><button class="del" aria-label="Delete '+esc(n)+'">✕</button></span><input type="text" class="c" inputmode="decimal" placeholder="Qty" aria-label="'+esc(n)+' quantity">';
+      const c=d.querySelector('.c');if(keep[d.dataset.k]){c.value=keep[d.dataset.k];d.classList.add('has');}
+      c.addEventListener('input',e=>d.classList.toggle('has',!!e.target.value.trim()));
+      d.querySelector('.del').onclick=()=>{if(confirm('Delete "'+n+'"?')){list.splice(ii,1);persist();renderW();}};
+      grp.appendChild(d);
+    });
+  });
+}
+renderD();renderW();
+
+/* ---------- share / clear ---------- */
+$('dshare').onclick=()=>{
+  const lines=[];
+  document.querySelectorAll('#ditems .item').forEach(r=>{
+    const q=r.querySelector('.q').value.trim(),n=r.querySelector('.n-t').textContent;
+    if(q)lines.push((lines.length+1)+'. '+n+' – '+q);
+  });
+  share('🛒 *FROOLLA – NEXT DAY PURCHASE LIST*\n\n📅 Purchase Date: '+fmt($('dd').value)+'\n\n*No.  Item Name – Quantity*\n'+(lines.length?lines.join('\n'):'(no items)')+'\n\n📝 Prepared By: '+($('dby').value.trim()||'__________'));
+};
+$('dclear').onclick=()=>{
+  document.querySelectorAll('#ditems .q').forEach(e=>e.value='');
+  document.querySelectorAll('#ditems .item').forEach(r=>r.classList.remove('has'));
+};
+$('wshare').onclick=()=>{
+  let out=[],total=0;
+  document.querySelectorAll('#witems [data-cat]').forEach(g=>{
+    const lines=[];
+    g.querySelectorAll('.item').forEach(r=>{
+      const c=r.querySelector('.c').value.trim();if(!c)return;
+      lines.push((lines.length+1)+'. '+r.querySelector('.n-t').textContent+' ('+r.querySelector('.u').textContent+') – '+c);
+    });
+    if(lines.length){total+=lines.length;out.push('*'+g.dataset.cat+'*\n'+lines.join('\n'));}
+  });
+  share('📦 *FROOLLA – ORDER LIST*\n\n📅 Order Date: '+fmt($('wd').value)+'\n\n'+(total?out.join('\n\n'):'(no items)')+'\n\n📝 Prepared By: '+($('wby').value.trim()||'__________'));
+};
+$('wclear').onclick=()=>{
+  document.querySelectorAll('#witems .c').forEach(e=>e.value='');
+  document.querySelectorAll('#witems .item').forEach(r=>r.classList.remove('has'));
+};
+</script>
+</body>
+</html>
